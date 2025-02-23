@@ -1,8 +1,15 @@
 // import React from 'react'
-import { Outlet } from 'react-router';
+import { Navigate, Outlet } from 'react-router';
+import { useAuth } from '../helper/AuthContext';
 import Navbar from './Navbar';
 
 function Home() {
+  const { token } = useAuth();
+
+  if (!token) {
+    return <Navigate to={'/login'} />;
+  }
+
   return (
     <>
       <Navbar />

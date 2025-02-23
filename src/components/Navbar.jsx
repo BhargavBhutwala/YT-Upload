@@ -7,10 +7,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
+import { useAuth } from '../helper/AuthContext';
 
 function Navbar() {
   const [auth, setAuth] = React.useState(true);
   const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const { logoutUser, token } = useAuth();
 
   const handleChange = (event) => {
     setAuth(event.target.checked);
@@ -40,7 +43,7 @@ function Navbar() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             YouTube Video Uploader
           </Typography>
-          {auth && (
+          {token && (
             <div>
               <IconButton
                 size="large"
@@ -69,6 +72,7 @@ function Navbar() {
               >
                 <MenuItem onClick={handleClose}>Profile</MenuItem>
                 <MenuItem onClick={handleClose}>My account</MenuItem>
+                <MenuItem onClick={() => logoutUser()}>Logout</MenuItem>
               </Menu>
             </div>
           )}
