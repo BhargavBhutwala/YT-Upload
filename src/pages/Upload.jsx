@@ -1,5 +1,6 @@
 import { CloudUpload, Publish, Visibility } from '@mui/icons-material';
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -12,10 +13,81 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import axios from 'axios';
+import { useState } from 'react';
+import { useAuth } from '../helper/AuthContext';
 
 function Upload() {
+  const { token } = useAuth();
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [visibility, setVisibility] = useState('');
+  const [video, setVideo] = useState('');
+
+  const [message, setMessage] = useState('');
+
+  // for three values
+  function changeValue(event) {
+    const name = event.target.name;
+    const value = event.target.value;
+
+    if (name === 'title') {
+      setTitle(value);
+    } else if (name === 'description') {
+      setDescription(value);
+    } else if (name === 'visibility') {
+      setVisibility(value);
+    }
+  }
+
+  // for uploading video
+  function handleVideoChange(event) {
+    setVideo(event.target.files[0]);
+  }
+
+  async function submitForm() {
+    //  console.log(video);
+    // send form data to server
+
+    const url = 'http://localhost:8080/api/youtube/upload';
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('visibility', visibility);
+    formData.append('videoFile', video);
+
+    const response = await axios.post(url, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response.status === 200) {
+      setMessage('Video uploaded successfully');
+    } else {
+      setMessage('Error uploading video');
+    }
+  }
+
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="md">
+      {message && (
+        <Alert
+          variant="filled"
+          severity={
+            message === 'Video uploaded successfully' ? 'success' : 'error'
+          }
+          sx={{
+            marginTop: 3,
+            color: 'white',
+          }}
+        >
+          {message}
+        </Alert>
+      )}
       <Paper
         elevation={6}
         sx={{
@@ -32,7 +104,6 @@ function Upload() {
           Please upload your video file in MP4 format with a maximum size of
           50MB
         </Typography>
-
         <Box
           component="form"
           display={'flex'}
@@ -40,8 +111,15 @@ function Upload() {
           marginTop={3}
           gap={3}
         >
-          <TextField label="Video Title" variant="outlined" />
           <TextField
+            name="title"
+            onChange={changeValue}
+            label="Video Title"
+            variant="outlined"
+          />
+          <TextField
+            name="description"
+            onChange={changeValue}
             label="Video Description"
             variant="outlined"
             multiline
@@ -49,23 +127,35 @@ function Upload() {
           />
           <input
             type="file"
+            onChange={handleVideoChange}
             id="video-upload"
             accept="video/"
             style={{ display: 'none' }}
           />
           <label htmlFor="video-upload">
-            <Button
-              variant="contained"
-              component="span"
-              color="secondary"
-              startIcon={<CloudUpload />}
-            >
-              Select files
-            </Button>
+            <Box display={'flex'} flexDirection={'row'} gap={2}>
+              <Button
+                variant="contained"
+                component="span"
+                color="secondary"
+                startIcon={<CloudUpload />}
+                sx={{ width: 200 }} // Set button width to 200px
+              >
+                Select file
+              </Button>
+              <TextField
+                value={video?.name || ''}
+                variant="outlined"
+                disabled={!video} // Disable the TextField if no file is selected
+                sx={{ flexGrow: 1 }} // This makes the TextField take up the remaining space
+              />
+            </Box>
           </label>
           <FormControl fullWidth>
             <InputLabel id="video-visibility">Visibility</InputLabel>
             <Select
+              name="visibility"
+              onChange={changeValue}
               label="video-visibility"
               startAdornment={
                 <InputAdornment position="start">
@@ -78,14 +168,18 @@ function Upload() {
               <MenuItem value="unlisted">Unlisted</MenuItem>
             </Select>
           </FormControl>
-          <Button
-            variant="contained"
-            size="large"
-            color="primary"
-            startIcon={<Publish />}
-          >
-            Upload Video
-          </Button>
+          <Box alignItems={'center'}>
+            <Button
+              variant="contained"
+              onClick={submitForm}
+              size="large"
+              color="primary"
+              startIcon={<Publish />}
+              sx={{ width: 200 }}
+            >
+              Upload Video
+            </Button>
+          </Box>
         </Box>
       </Paper>
     </Container>

@@ -5,4 +5,4 @@ A UI to directly upload videos on YouTube. This is a third party application tha
 ## Tech Stack
 
 - ReactJS
-- Matreial UI
+- Material UI
