@@ -27,6 +27,8 @@ function Upload() {
 
   const [message, setMessage] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   // for three values
   function changeValue(event) {
     const name = event.target.name;
@@ -48,27 +50,36 @@ function Upload() {
 
   async function submitForm() {
     //  console.log(video);
-    // send form data to server
+    try {
+      setLoading(true);
 
-    const url = 'http://localhost:8080/api/youtube/upload';
+      // send form data to server
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('visibility', visibility);
-    formData.append('videoFile', video);
+      const url = 'http://localhost:8080/api/youtube/upload';
 
-    const response = await axios.post(url, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('visibility', visibility);
+      formData.append('videoFile', video);
 
-    if (response.status === 200) {
-      setMessage('Video uploaded successfully');
-    } else {
+      const response = await axios.post(url, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
+        setMessage('Video uploaded successfully');
+      } else {
+        setMessage('Error uploading video');
+      }
+    } catch (error) {
+      console.error(error);
       setMessage('Error uploading video');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -171,13 +182,16 @@ function Upload() {
           <Box alignItems={'center'}>
             <Button
               variant="contained"
+              loading={loading}
+              loadingPosition="start"
+              disabled={loading}
               onClick={submitForm}
               size="large"
               color="primary"
               startIcon={<Publish />}
               sx={{ width: 200 }}
             >
-              Upload Video
+              {loading ? 'Uploading' : 'Upload'}
             </Button>
           </Box>
         </Box>
