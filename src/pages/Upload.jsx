@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Container,
   FormControl,
   InputAdornment,
@@ -15,6 +16,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../helper/AuthContext';
 
 function Upload() {
@@ -28,6 +30,8 @@ function Upload() {
   const [message, setMessage] = useState('');
 
   const [loading, setLoading] = useState(false);
+
+  const [tags, setTags] = useState([]);
 
   // for three values
   function changeValue(event) {
@@ -55,7 +59,7 @@ function Upload() {
 
       // send form data to server
 
-      const url = 'http://localhost:8080/api/youtube/upload';
+      const url = 'http://localhost:8080/api/youtube/video/upload';
 
       const formData = new FormData();
       formData.append('title', title);
@@ -80,6 +84,33 @@ function Upload() {
       setMessage('Error uploading video');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function generateVideoMetadata() {
+    if (title.trim() == '') {
+      toast.error('Video Title required!');
+      return;
+    }
+
+    const metadataUrl =
+      'http://localhost:8080/api/youtube/video/generate-metadata';
+
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+
+      const response = await axios.post(metadataUrl, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response.data);
+      setTitle(response.data.title);
+      setDescription(response.data.description);
+      setTags(response.data.tags);
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -124,12 +155,14 @@ function Upload() {
         >
           <TextField
             name="title"
+            value={title}
             onChange={changeValue}
             label="Video Title"
             variant="outlined"
           />
           <TextField
             name="description"
+            value={description}
             onChange={changeValue}
             label="Video Description"
             variant="outlined"
@@ -179,7 +212,41 @@ function Upload() {
               <MenuItem value="unlisted">Unlisted</MenuItem>
             </Select>
           </FormControl>
+
+          {tags.length > 0 && (
+            <Box
+              flex
+              flexDirection={'column'}
+              sx={{ textAlign: 'left' }}
+              marginTop={1}
+            >
+              <Typography variant="h6" gutterBottom>
+                Video Tags
+              </Typography>
+              <Box marginTop={1}>
+                {tags.map((item, index) => (
+                  <Chip
+                    variant="filled"
+                    color="default"
+                    label={item}
+                    key={index}
+                    sx={{ margin: 0.5 }}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+
           <Box alignItems={'center'}>
+            <Button
+              onClick={generateVideoMetadata}
+              variant="contained"
+              size="large"
+              color="info"
+            >
+              Generate Metadata
+            </Button>
             <Button
               variant="contained"
               loading={loading}
@@ -189,7 +256,7 @@ function Upload() {
               size="large"
               color="primary"
               startIcon={<Publish />}
-              sx={{ width: 200 }}
+              sx={{ width: 200, marginLeft: 2 }}
             >
               {loading ? 'Uploading' : 'Upload'}
             </Button>
